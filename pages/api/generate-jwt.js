@@ -15,7 +15,8 @@ export default function handler(req, res) {
   // Vervang literal "\n" door echte nieuwe regels in de PEM-sleutel
   let privateKey = COINBASE_PRIVATE_KEY
   if (privateKey.includes('\n')) {
-    privateKey = privateKey.replace(/\n/g, '\n')
+    privateKey = privateKey.replace(/\n/g, '
+')
   }
 
   const now = Math.floor(Date.now() / 1000)
@@ -29,8 +30,9 @@ export default function handler(req, res) {
   }
 
   try {
+    // Gebruik ES256 voor EC private keys
     const token = jwt.sign(payload, privateKey, {
-      algorithm: 'RS256',
+      algorithm: 'ES256',
       header: { kid: COINBASE_KEY_ID }
     })
     return res.status(200).json({ token })
@@ -39,4 +41,3 @@ export default function handler(req, res) {
     return res.status(500).json({ error: 'Kon JWT niet genereren.' })
   }
 }
-
