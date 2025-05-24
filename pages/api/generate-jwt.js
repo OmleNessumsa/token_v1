@@ -12,6 +12,12 @@ export default function handler(req, res) {
     return res.status(500).json({ error: 'Env vars ontbreken.' })
   }
 
+  // Vervang literal "\n" door echte nieuwe regels in de PEM-sleutel
+  let privateKey = COINBASE_PRIVATE_KEY
+  if (privateKey.includes('\n')) {
+    privateKey = privateKey.replace(/\n/g, '\n')
+  }
+
   const now = Math.floor(Date.now() / 1000)
   const payload = {
     iss: COINBASE_APP_ID,
@@ -22,10 +28,15 @@ export default function handler(req, res) {
     jti: uuidv4()
   }
 
-  const token = jwt.sign(payload, COINBASE_PRIVATE_KEY, {
-    algorithm: 'RS256',
-    header: { kid: COINBASE_KEY_ID }
-  })
-
-  res.status(200).json({ token })
+  try {
+    const token = jwt.sign(payload, privateKey, {
+      algorithm: 'RS256',
+      header: { kid: COINBASE_KEY_ID }
+    })
+    return res.status(200).json({ token })
+  } catch (error) {
+    console.error('JWT sign error:', error)
+    return res.status(500).json({ error: 'Kon JWT niet genereren.' })
+  }
 }
+
